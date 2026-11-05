@@ -1,73 +1,77 @@
-# ARCHIVE — Aliucord local backup manager
+# ARCHIVE for Aliucord — 0.3.0
 
-**Status: source MVP, not a verified installable release.**
+**Creator credit: ABYSSCORE-LLC** — https://github.com/ABYSSCORE-LLC
 
-ARCHIVE is a Kotlin Aliucord plugin project that registers one slash command:
+ARCHIVE is a local-first JSON snapshot manager exposed through Aliucord's slash-command API. It stores backup files inside Aliucord's private application files directory. No Discord token is collected and the plugin does not send backup data to a remote server.
 
-`/archive action:<create|list|load|delete>`
+## Important: source ZIP versus installable plugin ZIP
 
-It stores JSON snapshots under the plugin app's private files directory. It does not upload data, request Discord credentials, automate a user account through private endpoints, or bypass server permissions.
+This download is the **complete Gradle source project**. It is not a compiled Aliucord plugin binary and must not be copied directly into `Aliucord/plugins`.
 
-## Current scope and honest limitations
+To create the installable plugin ZIP, build the `:plugins:ARCHIVE:make` Gradle task. The official Aliucord Gradle plugin prints the exact output path when the task succeeds. Copy that generated plugin ZIP (not this source ZIP) into the device's `Aliucord/plugins` folder, then restart Aliucord.
 
-This initial project implements local JSON backup storage and management. The `create` action accepts JSON supplied in the command option; `load` prints the saved JSON. It does **not** yet read a live guild's channels/roles/settings or apply a restore to a destination guild. Those operations require carefully verified Aliucord Discord model/REST integration and permission checks; they are intentionally not faked.
+The root `manifest.json` identifies this source project for archive/import tools. It does not replace the official Aliucord Gradle build or turn the source archive into an installable binary.
 
-The same local backup file can be used as an input for a future authorized import/restore workflow. Copying another server's configuration is only appropriate where you have permission and where Discord's supported operations allow it. Discord prohibits automating ordinary user accounts as self-bots; this plugin does not attempt that.
+## Requirements
 
-## Build requirements
-
-- Android Studio
-- Git
-- JDK 21+
-- Android SDK platform 36
-- Network access to the Aliucord Maven repository on first Gradle sync
-- An Aliucord installation for device testing
-
-The official Aliucord template currently documents JDK 21+, Kotlin plugin development, `make` and `deployWithAdb` tasks, and the output ZIP location. The official template is the best baseline if the current Gradle plugin version changes:
-https://github.com/Aliucord/plugins-template
+- JDK 21 or newer
+- Android SDK platform 36 and build tools installed
+- Network access for the first Gradle build, so Gradle and Aliucord dependencies can be downloaded
+- Android Studio (recommended) or a terminal
 
 ## Build on Windows
 
-Open this directory in Android Studio and allow Gradle sync. Or, with Gradle installed:
+Open PowerShell or Command Prompt in this directory:
 
-```powershell
-gradle :ARCHIVE:make
+```bat
+.\gradlew.bat :plugins:ARCHIVE:make
 ```
 
-The Aliucord Gradle plugin emits a plugin ZIP under the plugin's `builds/outputs` directory.
+To build and install directly to an authorized connected Android device:
 
-For a connected test device with USB debugging authorized:
-
-```powershell
-gradle :ARCHIVE:deployWithAdb
+```bat
+.\gradlew.bat :plugins:ARCHIVE:deployWithAdb
 ```
 
-## Build on Linux/macOS
+## Build on macOS or Linux
 
 ```bash
-gradle :ARCHIVE:make
-gradle :ARCHIVE:deployWithAdb
+chmod +x ./gradlew
+./gradlew :plugins:ARCHIVE:make
 ```
 
-## Command usage
+For direct ADB deployment:
 
-- `/archive action:list`
-- `/archive action:create name:my-backup json:{"guild":"example","channels":[],"roles":[]}`
-- `/archive action:load name:my-backup`
-- `/archive action:delete name:my-backup`
+```bash
+./gradlew :plugins:ARCHIVE:deployWithAdb
+```
 
-Discord limits the size of individual slash-command string options. Large snapshots should be imported from a file using a future file-picker workflow rather than pasted into the command.
+## Commands
 
-## Storage and safety
+The plugin registers the `/back-up` command. Its operations are:
 
-- Backup files are JSON.
-- Data remains in the plugin's private app storage.
-- Deleting a backup permanently deletes its local JSON file.
-- The current MVP has no encryption-at-rest. Protect the Android device and its app data accordingly.
-- `load` is a preview/export-like read operation, not a server restore.
+| Command | Behavior |
+|---|---|
+| `/back-up create` | Saves a supplied JSON object as a named local snapshot. Requires `name`, `scope` (`server`, `channel`, or `both`), and `json`. |
+| `/back-up list` | Lists the newest local backups. |
+| `/back-up info` | Shows the saved snapshot's metadata. |
+| `/back-up load` | Reads and displays a JSON preview. |
+| `/back-up delete` | Deletes the selected local snapshot. |
 
-## Compatibility note
+All command responses are private. Backup names are unique and restricted to safe filename-independent characters. JSON input is validated before writing. Files are written through a temporary file and renamed into place. Backup files include a schema version and are checked again when loaded.
 
-Aliucord's template and Gradle plugin evolve. This project follows the currently documented template dependency versions and command registration example, but it has not been compiled against a live Aliucord checkout in this environment. Run a Gradle build before installing. If Aliucord's current Discord version or Gradle plugin API has changed, align versions with:
-https://github.com/Aliucord/gradle-plugin
-https://github.com/Aliucord/plugins-template
+## Functional boundary — read before relying on it
+
+This release **does not automatically crawl a live Discord server**. The `scope` field labels the kind of JSON snapshot supplied by the user; it does not trigger server/channel scraping. Likewise, `/back-up load` previews a stored snapshot and does not recreate roles, channels, permissions, messages, emojis, or other live Discord objects.
+
+A real Xenon-style server backup/restore feature requires separate, tested integrations with Aliucord's supported Discord models and authorized write operations. This release intentionally does not claim those features are implemented. It does provide working local JSON backup management once compiled and installed.
+
+## Validation status
+
+The source was checked for manifest JSON validity, expected Aliucord project layout, command API signatures documented by Aliucord, path-safe local storage, and ZIP integrity. A full Gradle/Android compile could not be completed in this environment because external Gradle/Maven dependencies are not reachable here. Therefore this archive is **not represented as a successfully compiled or device-tested plugin**. Run the build command above on a machine with JDK 21, Android SDK 36, and network access before installing it.
+
+## Official references
+
+- Aliucord plugin template: https://github.com/Aliucord/plugins-template
+- Aliucord Gradle plugin: https://github.com/Aliucord/gradle-plugin
+- Aliucord command development docs: https://github.com/Aliucord/documentation/blob/main/plugin-dev/2_commands.md

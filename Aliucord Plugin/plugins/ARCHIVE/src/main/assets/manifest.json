@@ -1,0 +1,12 @@
+{
+  "id": "com.abysscore.archive",
+  "name": "ARCHIVE",
+  "version": "0.3.0",
+  "description": "Local-first JSON backup archive manager for Aliucord.",
+  "platform": "Aliucord",
+  "type": "aliucord-plugin-project",
+  "main": "com.abysscore.archive.ArchivePlugin",
+  "authors": ["ABYSSCORE-LLC"],
+  "androidManifest": "plugins/ARCHIVE/src/main/AndroidManifest.xml",
+  "buildTask": ":plugins:ARCHIVE:make"
+}

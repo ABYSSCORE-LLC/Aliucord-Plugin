@@ -1,0 +1,18 @@
+ARCHIVE 0.3.0 — validation record
+
+Passed in this environment:
+- All expected source/project files are present.
+- Root and plugin JSON manifests parse successfully.
+- Slash-command branches and local storage safeguards were checked.
+- Source ZIP integrity check passed (no corrupt entries).
+- Source ZIP contains a root-level manifest.json and no unsafe archive paths.
+
+Not completed:
+- Gradle :plugins:ARCHIVE:make did not run because this environment could not resolve services.gradle.org (DNS/network unavailable).
+- No compiled Aliucord plugin ZIP was produced.
+- No installation or runtime test on an Android device was performed.
+
+Do not install this source ZIP as if it were a compiled plugin. Build it with JDK 21+, Android SDK 36, and network access using:
+  ./gradlew :plugins:ARCHIVE:make
+
+The build task's output ZIP is the file to copy into Aliucord/plugins.
